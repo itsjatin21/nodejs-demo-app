@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: nodejs-login-chat-app
-          image: ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
+          image: itsjatinsharma/nodejs-login-chat-app:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
