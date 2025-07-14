@@ -1,0 +1,44 @@
+name: CICD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout source
+        uses: actions/checkout@v2
+      - name: login to dockerhub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: build docker image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest .
+      - name: push docker image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: start Minikube
+        run: minikube start --driver=docker
+      - name: Pull docker image
+        run: docker pull ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
+      - name: deploy to Minikube
+        run: |
+          kubectl apply -f deployment.yml
+          kubectl apply -f service.yml
+      - name: verify deployment
+        run: |
+          kubectl get pods
+          minikube service nodejs-login-chat-app --url
+      - name: minikube url
+        run: echo "Application is accessible at $(minikube service nodejs-login-chat-app --url)"
+      - name: Notify deployment
+        run: echo "Deployment successful! The application is now running on port 8080." 
+
