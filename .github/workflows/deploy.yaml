@@ -23,20 +23,29 @@ jobs:
 
       - name: Push docker image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
+        
       - name: Install kubectl
         uses: azure/setup-kubectl@v3
         with:
           version: 'latest'
+
+      - name: Start Minikube
+        run: minikube start --driver=docker
+
+      - name: Verify Minikube Status
+        run: |
+          until minikube status | grep -q "Running"; do
+            echo "Waiting for Minikube to be ready..."
+            sleep 5
+          done
+          minikube status
 
       - name: Configure kubectl
         run: |
           mkdir -p $HOME/.kube
           touch $HOME/.kube/config
           minikube update-context
-          kubectl config use-context minikube  
-
-      - name: Start Minikube
-        run: minikube start --driver=docker
+          kubectl config use-context minikube
 
       - name: Pull docker image
         run: docker pull ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
