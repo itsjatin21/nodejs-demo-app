@@ -29,8 +29,8 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
 
   deploy:
-    needs: build
     runs-on: self-hosted
+    needs: build
     steps:
       - name: docker version
         run: docker --version
