@@ -1,0 +1,28 @@
+apiversion: apps/v1
+kind: Deployment
+metadata:
+  name: nodejs-login-chat-app
+  labels:
+    app: nodejs-login-chat-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nodejs-login-chat-app
+  template:
+    metadata:
+      labels:
+        app: nodejs-login-chat-app
+    spec:
+      containers:
+        - name: nodejs-login-chat-app
+          image: ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
+          build:
+            context: .
+            dockerfile: Dockerfile
+          
+          ports:
+            - containerPort: 8080
+          env:
+            - name: NODE_ENV
+              value: "development"
