@@ -23,14 +23,22 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
+      - name: start Minikube
+        run: minikube start --driver=docker
       - name: Pull docker image
         run: docker pull ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
-      - name: Remove old container
-        run: docker rm -f nodejs-login-chat-app
-      - name: Run new container
-        run: docker run -d -p 8080:8080 --name nodejs-login-chat-app ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
+      - name: deploy to Minikube
+        run: |
+          kubectl apply -f k8s/deployment.yml
+          kubectl apply -f k8s/service.yml
+      - name: verify deployment
+        run: |
+          kubectl get pods
+          minikube service nodejs-login-chat-app --url
+      - name: minikube url
+        run: echo "Application is accessible at $(minikube service nodejs-login-chat-app --url)"
       - name: Notify deployment
         run: echo "Deployment successful! The application is now running on port 8080." 
 
