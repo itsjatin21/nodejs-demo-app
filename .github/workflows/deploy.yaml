@@ -34,8 +34,6 @@ jobs:
     steps:
       - name: docker version
         run: docker --version
-      - name: update
-        run: sudo apt-get update
       - name: pull Docker image
         run: docker pull ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
       - name: remove old container
