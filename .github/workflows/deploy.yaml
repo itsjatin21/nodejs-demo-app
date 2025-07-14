@@ -1,4 +1,4 @@
-name: Deploy Node.js App to Minikube
+name: Deploy Node.js App
 
 on:
   push:
@@ -61,11 +61,23 @@ jobs:
           kubectl describe deployment nodejs-login-chat-app
           kubectl logs -l app=nodejs-login-chat-app || echo "No logs found"
 
-      - name: Get App URL
+      - name: Install cloudflared
         run: |
-          echo "Fetching service URL..."
+          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+          chmod +x cloudflared
+          sudo mv cloudflared /usr/local/bin/
+
+      - name: Start Cloudflare Tunnel
+        run: |
+          NODE_PORT=$(kubectl get svc nodejs-login-chat-app -o=jsonpath='{.spec.ports[0].nodePort}')
+          HOST_IP=$(minikube ip)
+
+          echo "Starting Cloudflare Tunnel to http://$HOST_IP:$NODE_PORT"
+          nohup cloudflared tunnel --url http://$HOST_IP:$NODE_PORT > cf.log 2>&1 &
           sleep 10
-          minikube service nodejs-login-chat-app --url || echo "Service not ready yet"
+
+          echo "Fetching Cloudflare public URL..."
+          curl http://localhost:4040/api/tunnels || echo "Cloudflare tunnel API not available"
 
       - name: Notify Deployment Success
-        run: echo "✅ Deployment successful! Your app is running in Minikube."
+        run: echo "✅ Deployment successful! Your app is publicly accessible via Cloudflare tunnel."
