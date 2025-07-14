@@ -50,6 +50,30 @@ npm start
 
 By default, the program can be accessed on ``http://localhost:8080`` or from another machine on your network, ``http://<YOUR IP ADDRESS>:8080``.
 
+### Deploy TO EC2
+
+Create a Dockerfile
+
+Build docker image
+```
+docker build -t <dockerhubusername>/nodejs-login-chat-app:latest
+docker run -d --name nodejs-login-chat-app -p 8080:8080 <dockerhubusername>/nodejs-login-chat-app:latest
+```
+After tested conatiner locally 
+Set up Github Actions Pipeline, deploy.yaml file present in repository
+set up self hosted 
+```
+Go to repo settings
+Click Action, Click on Runners 
+set up the self hosted runners
+```
+Add secrets to repo secerts
+
+create any commit pipeline deploy application
+Go to your EC2Instance on AWS Console in Security Group edit imbound rules Allow custom tcp on 8080 Port
+save 
+Copy Public Ip Address and Past on New Tab on your Browser add :8080 at last
+Your Application is Deploy. 
 ## Screenshots
 
 <img src="screenshots/sign-in.png" alt="Sign In form" style="width: 100%">
