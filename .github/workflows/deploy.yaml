@@ -32,13 +32,13 @@ jobs:
 
       - name: Deploy to Minikube
         run: |
-          kubectl apply -f deployment.yml || echo "Error applying deployment.yml"
-          kubectl apply -f service.yml || echo "Error applying service.yml"
+          kubectl apply -f deployment.yml 
+          kubectl apply -f service.yml 
 
       - name: Verify deployment
         run: |
           kubectl get pods
-          minikube service nodejs-login-chat-app --url || echo "Warning: Service URL retrieval failed"
+          minikube service nodejs-login-chat-app --url 
 
       - name: Notify deployment
         run: echo "Deployment successful! The application is now running on port 8080."
