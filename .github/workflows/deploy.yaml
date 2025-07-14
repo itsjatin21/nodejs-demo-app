@@ -23,7 +23,7 @@ jobs:
 
       - name: Push docker image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
-        
+
       - name: Install kubectl
         uses: azure/setup-kubectl@v3
         with:
@@ -48,17 +48,60 @@ jobs:
           kubectl config use-context minikube
 
       - name: Pull docker image
-        run: docker pull ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
+        run: |
+          docker pull ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest || { echo "Error pulling image"; exit 1; }
+
+      - name: Check for deployment.yml
+        run: |
+          if [ ! -f deployment.yml ]; then
+            echo "Error: deployment.yml does not exist"
+            exit 1
+          fi
+          cat deployment.yml
+
+      - name: Check for service.yml
+        run: |
+          if [ ! -f service.yml ]; then
+            echo "Error: service.yml does not exist"
+            exit 1
+          fi
+          cat service.yml
+
+      - name: Validate Kubernetes manifests
+        run: |
+          kubectl apply --dry-run=client -f deployment.yml || { echo "Error validating deployment.yml"; exit 1; }
+          kubectl apply --dry-run=client -f service.yml || { echo "Error validating service.yml"; exit 1; }
 
       - name: Deploy to Minikube
         run: |
-          kubectl apply -f deployment.yml 
-          kubectl apply -f service.yml 
+          echo "Applying Kubernetes manifests"
+          kubectl apply -f deployment.yml || { echo "Error applying deployment.yml"; exit 1; }
+          kubectl apply -f service.yml || { echo "Error applying service.yml"; exit 1; }
+
+      - name: Wait for Pods
+        run: |
+          echo "Waiting for pods to be ready..."
+          kubectl wait --for=condition=ready pod -l app=nodejs-login-chat-app --timeout=120s
+
+      - name: Debug Deployment
+        run: |
+          echo "Describing deployment"
+          kubectl describe deployment nodejs-login-chat-app
+          echo "Describing pods"
+          kubectl describe pods -l app=nodejs-login-chat-app
+          echo "Getting pod logs"
+          pods=$(kubectl get pods -l app=nodejs-login-chat-app -o jsonpath='{.items[*].metadata.name}')
+          for pod in $pods; do
+            echo "Logs for pod $pod:"
+            kubectl logs $pod || echo "No logs available for $pod"
+          done
 
       - name: Verify deployment
         run: |
-          kubectl get pods
-          minikube service nodejs-login-chat-app --url 
+          echo "Checking pod status"
+          kubectl get pods -o wide
+          echo "Checking service status"
+          minikube service nodejs-login-chat-app --url || echo "Warning: Service URL retrieval failed"
 
       - name: Notify deployment
         run: echo "Deployment successful! The application is now running on port 8080."
