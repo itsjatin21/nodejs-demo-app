@@ -31,8 +31,8 @@ jobs:
         run: docker pull ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
       - name: deploy to Minikube
         run: |
-          kubectl apply -f node.js-project/k8s/deployment.yml
-          kubectl apply -f node.js-project/k8s/service.yml
+          kubectl apply -f deployment.yml
+          kubectl apply -f service.yml
       - name: verify deployment
         run: |
           kubectl get pods
