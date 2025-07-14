@@ -69,11 +69,16 @@ set up the self hosted runners
 ```
 Add secrets to repo secerts
 
-create any commit pipeline deploy application
+create any commit pipeline deploy application.
+
 Go to your EC2Instance on AWS Console in Security Group edit imbound rules Allow custom tcp on 8080 Port
+
 save 
+
 Copy Public Ip Address and Past on New Tab on your Browser add :8080 at last
+
 Your Application is Deploy. 
+
 ## Screenshots
 
 <img src="screenshots/sign-in.png" alt="Sign In form" style="width: 100%">
