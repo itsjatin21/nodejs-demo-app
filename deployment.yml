@@ -17,9 +17,7 @@ spec:
       containers:
         - name: nodejs-login-chat-app
           image: ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
-          build:
-            context: .
-            dockerfile: Dockerfile
+          imagePullPolicy: Always
           
           ports:
             - containerPort: 8080
