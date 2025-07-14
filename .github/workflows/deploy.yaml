@@ -8,8 +8,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Login to DockerHub
@@ -18,90 +19,53 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build docker image
+      - name: Build Docker Image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest .
 
-      - name: Push docker image
+      - name: Push Docker Image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'latest'
+      - name: Set up Minikube
+        uses: medyagh/setup-minikube@latest
 
-      - name: Start Minikube
-        run: minikube start --driver=docker
+      - name: Load Docker Image into Minikube
+        run: minikube image load ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
 
-      - name: Verify Minikube Status
-        run: |
-          until minikube status | grep -q "Running"; do
-            echo "Waiting for Minikube to be ready..."
-            sleep 5
-          done
-          minikube status
-
-      - name: Configure kubectl
-        run: |
-          mkdir -p $HOME/.kube
-          touch $HOME/.kube/config
-          minikube update-context
-          kubectl config use-context minikube
-
-      - name: Pull docker image
-        run: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest || { echo "Error pulling image"; exit 1; }
-
-      - name: Check for deployment.yml
+      - name: Validate Kubernetes Manifests
         run: |
           if [ ! -f deployment.yml ]; then
-            echo "Error: deployment.yml does not exist"
-            exit 1
+            echo "Error: deployment.yml not found" && exit 1
           fi
-          cat deployment.yml
-
-      - name: Check for service.yml
-        run: |
           if [ ! -f service.yml ]; then
-            echo "Error: service.yml does not exist"
-            exit 1
+            echo "Error: service.yml not found" && exit 1
           fi
-          cat service.yml
+          kubectl apply --dry-run=client -f deployment.yml
+          kubectl apply --dry-run=client -f service.yml
 
-      - name: Validate Kubernetes manifests
+      - name: Apply Kubernetes Manifests
         run: |
-          kubectl apply --dry-run=client -f deployment.yml || { echo "Error validating deployment.yml"; exit 1; }
-          kubectl apply --dry-run=client -f service.yml || { echo "Error validating service.yml"; exit 1; }
+          kubectl apply -f deployment.yml
+          kubectl apply -f service.yml
 
-      - name: Deploy to Minikube
-        run: |
-          echo "Applying Kubernetes manifests"
-          kubectl apply -f deployment.yml || { echo "Error applying deployment.yml"; exit 1; }
-          kubectl apply -f service.yml || { echo "Error applying service.yml"; exit 1; }
+      - name: Wait for Deployment to Rollout
+        run: kubectl rollout status deployment/nodejs-login-chat-app --timeout=180s
 
-      - name: Wait for Pods
+      - name: Wait for Pods to be Ready
         run: |
           echo "Waiting for pods to be ready..."
           kubectl wait --for=condition=ready pod -l app=nodejs-login-chat-app --timeout=360s
 
-      - name: Debug Deployment
+      - name: Debug Kubernetes Resources
         run: |
-          echo "Describing deployment"
+          kubectl get all
           kubectl describe deployment nodejs-login-chat-app
-          echo "Describing pods"
-          kubectl describe pods -l app=nodejs-login-chat-app
-          echo "Getting pod logs"
-          pods=$(kubectl get pods -l app=nodejs-login-chat-app -o jsonpath='{.items[*].metadata.name}')
-          for pod in $pods; do
-            echo "Logs for pod $pod:"
-            kubectl logs $pod || echo "No logs available for $pod"
-          done
+          kubectl logs -l app=nodejs-login-chat-app || echo "No logs found"
 
-      - name: Verify deployment
+      - name: Get App URL
         run: |
-          echo "Checking pod status"
-          kubectl get pods -o wide
-          echo "Checking service status"
-          minikube service nodejs-login-chat-app --url || echo "Warning: Service URL retrieval failed"
+          echo "Fetching service URL..."
+          sleep 10
+          minikube service nodejs-login-chat-app --url || echo "Service not ready yet"
 
-      - name: Notify deployment
-        run: echo "Deployment successful! The application is now running on port 8080."
+      - name: Notify Deployment Success
+        run: echo "✅ Deployment successful! Your app is running in Minikube."
