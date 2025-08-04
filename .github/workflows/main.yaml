@@ -44,6 +44,17 @@ jobs:
           else
             echo "Docker already installed"
           fi
+      - name: Ensure Docker group access
+        run: |
+          if ! groups $USER | grep -q docker; then
+          echo "Adding $USER to docker group"
+            sudo usermod -aG docker $USER
+            newgrp docker
+          else
+            echo "$USER is already in docker group"
+          fi
+      - name: Check Docker access
+        run: docker ps
       - name: docker version
         run: docker --version
       - name: pull Docker image
