@@ -32,6 +32,18 @@ jobs:
     runs-on: self-hosted
     needs: build
     steps:
+      - name: Check Docker
+        run: |
+          if ! command -v docker &> /dev/null
+          then
+            echo "Docker not found. Installing..."
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sh get-docker.sh
+            sudo usermod -aG docker $USER
+            newgrp docker
+          else
+            echo "Docker already installed"
+          fi
       - name: docker version
         run: docker --version
       - name: pull Docker image
