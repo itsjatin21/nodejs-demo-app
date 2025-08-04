@@ -60,13 +60,14 @@ docker build -t <dockerhubusername>/nodejs-login-chat-app:latest
 docker run -d --name nodejs-login-chat-app -p 8080:8080 <dockerhubusername>/nodejs-login-chat-app:latest
 ```
 After tested conatiner locally 
-Set up Github Actions Pipeline, deploy.yaml file present in repository
+Set up Github Actions Pipeline, main.yaml file present in repository
 set up self hosted 
 ```
 Go to repo settings
 Click Action, Click on Runners 
 set up the self hosted runners
 ```
+(Login into Ec2 self hosted - add docker daemon permission)
 Add secrets to repo secerts
 
 create any commit pipeline deploy application.
@@ -92,3 +93,4 @@ Your Application is Deploy.
 <img src="screenshots/delete.png" alt="Delete account page" style="width: 100%">
 
 <img src="screenshots/404.png" alt="Error 404 not found" style="width: 100%">
+
