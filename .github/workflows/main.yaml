@@ -26,7 +26,7 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/nodejs-demo-app:latest
 
   deploy:
     runs-on: self-hosted
@@ -47,7 +47,7 @@ jobs:
       - name: docker version
         run: docker --version
       - name: pull Docker image
-        run: docker pull ${{ secrets.DOCKER_USERNAME }}/nodejs-login-chat-app:latest
+        run: docker pull ${{ secrets.DOCKER_USERNAME }}/nodejs-demo-app:latest
       - name: remove old container
         run: docker rm -f nodejs-login-chat-app
       - name: Run docker container
